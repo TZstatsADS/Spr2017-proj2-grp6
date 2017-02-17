@@ -7,61 +7,129 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(stringr)
 library(tidyr)
 library(readr)
+library(choroplethr)
+library(choroplethrMaps)
+library(choroplethrZip)
+source("../lib/hospital_data_utils.R")
+source("../lib/mapping_region_utils.R")
+source("../lib/cost_filtering_utils.R")
 ```
-
-
-Import the hospital charge data
-```{r}
-hospital_charge_data <- read_csv("~/Google Drive/Applied Data Science Projects/Proj2/Spr2017-proj2-grp6/data/hospital_charge_data.csv", col_types = cols(`Average Covered Charges` = col_number(),`Average Medicare Payments` = col_number(),`Average Total Payments` = col_number()))
+# Load Clean Data
+```{r, message=FALSE, warning=FALSE}
+hcd <- loadHospitalChargeData_CSV()
+hrd <- loadHospitalReadmissionData_CSV()
 ```
-Fix the column names
+# Get data for the heatmap
 ```{r}
-cnames <- colnames(hospital_charge_data)
-new_cnames <- tolower(gsub("[ ]","_",cnames,perl=FALSE))
-new_cnames -> colnames(hospital_charge_data)
-drg <- as.numeric(str_extract(hospital_charge_data$drg_definition,"[0-9]+"))
-mdf <- hospital_charge_data %>% mutate(drg_code = drg)
-```
-Get data for the heatmap
-```{r}
-hospital_charges <- mdf %>%
-  select(drg_definition,total_discharges,provider_id,average_covered_charges) %>%
+hospital_charges <- hcd %>%
+  select(drg_definition, provider_id, total_discharges, average_covered_charges) %>%
   mutate(charge_total = total_discharges*average_covered_charges) %>%
   group_by(provider_id) %>%
   summarise(provider_gross_charges = sum(charge_total))
-# can chart a distribution of revenues by hospital?
+```
 
-top_hospitals_billing <- hospital_charges %>%
+```{r}
+top_hospitals_billing <- hcd %>%
+  select(provider_id, total_discharges, average_covered_charges) %>%
+  ddply(.(provider_id), summarise, total_charges = sum(total_discharges*average_covered_charges)) %>%
   top_n(20)
 
-top_billing_procedures <- mdf %>%
-  select(drg_definition,drg_code,total_discharges,provider_id,average_covered_charges) %>%
-  mutate(charge_total = total_discharges*average_covered_charges) %>%
-  group_by(drg_code) %>%
-  summarise(drg_gross_charges = sum(charge_total)) %>%
+top_billing_procedures <- hcd %>%
+  select(drg_code,total_discharges,provider_id,average_covered_charges) %>%
+  ddply(.(drg_code), summarise, total_charges = sum(total_discharges*average_covered_charges)) %>%
   top_n(20)
 
-hos<-unique(top_hospitals_billing$provider_id)
-proc<-unique(top_billing_procedures$drg_code)
+top_hosp_proc <- hcd %>%
+  filter(provider_id %in% top_hospitals_billing$provider_id &
+           drg_code %in% top_billing_procedures$drg_code) %>%
+  ddply(.(provider_id,drg_code), summarise, total_charges = sum(total_discharges*average_covered_charges))
 
-hmdata <- mdf %>%
-  filter(drg_code %in% proc & provider_id %in% hos) %>%
-  select(drg_definition,provider_name,total_discharges,average_covered_charges) %>%
-  mutate(charge_total = total_discharges*average_covered_charges)
+desc <- hcd %>%
+  select(provider_name, provider_id, drg_definition, drg_code) %>%
+  distinct()
+
+hm <- left_join(top_hosp_proc,desc)
 ```
 heatmap
-```{r}
+```{r fig.height=8}
 library(ggplot2)
-ggplot(data = hmdata, aes(x = provider_name, y = drg_definition)) + 
-  geom_tile(aes(fill = charge_total)) +
+ggplot(data = hm, aes(x = provider_name, y = drg_definition)) + 
+  geom_tile(aes(fill = total_charges)) +
   scale_fill_gradient2(low="darkblue", high="darkgreen", guide="colorbar") + 
   theme(axis.text.x = element_text(angle = -90, hjust = 0))
 ```
+
+Function Test
+```{r}
+state_query <- c("ma","ny","ct","vt","nj")
+
+out <- hcd %>%
+  filter(state_name %in% state_query) %>%
+  ddply(.(state_name), summarise, avg_medicare_pmt = sum(total_discharges*average_medicare_payments)/sum(total_discharges)) %>%
+  select(state_name,avg_medicare_pmt)
+```
+
+
+Differences In Avg Cost Per Procedures By State
+```{r}
+
+procedureCostState <- function(hcd_df, state_list, drg_code){
+  out <- hcd %>%
+  filter(state_name %in% state_query & drg_code %in% drg_query) %>%
+  ddply(.(state_name), summarise, avg_covered = sum(total_discharges*average_covered_charges)/sum(total_discharges)) %>%
+  select(state_name,avg_covered)
+  return(out)
+}
+
+```
+Test
+```{r}
+state_query <- unique(hcd$state_name)
+out<-procedureCostState(hcd,state_query,drg_query)
+```
+
+
+Plot of Healthcare Revenue By State By Zipcode
+```{r}
+valid_zips <- zip.regions %>%
+  filter(state.name %in% "massachusetts") %>%
+  select(region)
+
+zip_spending <- hcd %>%
+  filter(provider_zip_code %in% valid_zips$region) %>%
+  select(provider_zip_code,total_discharges,average_medicare_payments) %>%
+  ddply(.(provider_zip_code),summarise,medicare_reimbursements = sum(total_discharges*average_medicare_payments))
+colnames(zip_spending) <- c("region","value")
+zip_choropleth(zip_spending, title="Total Medicare Reimbursements by Zip", state_zoom = "massachusetts")
+```
+
+
+Plot of Medicare Reimbursements by State by County
+
+```{r}
+valid_zips <- zip.regions %>%
+  filter(state.name %in% "massachusetts") %>%
+  select(region,county.name)
+
+county_spending <- hcd %>%
+  select(provider_zip_code,total_discharges,average_medicare_payments) %>%
+  filter(provider_zip_code %in% valid_zips$region) %>%
+  ddply(.(provider_zip_code),summarise,medicare_reimbursements = sum(total_discharges*average_medicare_payments))
+county_spending <- inner_join(county_spending,valid_zips,by = c("provider_zip_code"="region")) %>%
+  ddply(.(county.name), summarise, medicare_reimbursements = sum(medicare_reimbursements))
+mapData <- county_spending %>%
+  select(county.name,medicare_reimbursements)
+colnames(mapData) <- c("region","value")
+
+county_choropleth(mapData, title="Total Medicare Reimbursements by County", state_zoom = "massachusetts")
+```
+
+
 Cardiac Related Procedures
 ```{r}
 heart_related <- mdf %>%
@@ -82,7 +150,7 @@ ij<-ij %>% mutate(zip = as.character(provider_zip_code),
 ```
 Clean mapping data so that it works with choropleth package
 ```{r}
-data("zip.regions")
+data(zip.regions)
 cz<-zip.regions %>%
   select(region,county.name,state.name)
 ij<-ij %>%
