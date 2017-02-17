@@ -1,0 +1,93 @@
+---
+title: "Siyuan Yao"
+output: html_document
+---
+
+```{r}
+library(dtplyr)
+library(dplyr)
+library(plyr)
+library(ggplot2)
+library(maps)
+```
+
+```{r}
+readmission <-read.csv(file="D:/Spr2017-proj2-grp6/data/readmission_cleaning.csv", as.is=T)
+readmission <- readmission[,-1]
+```
+
+#Different Measure Histogram
+I think in the shiny app, in the map modeling, we can add some description(like histogram, not pie chart) form on measure since we focus on the measure score just like the tutorial example "Noise". Meanwhile I want to use "data.table" function to get more details, but I have some trouble in my local directory, I am fixing that now. 
+```{r}
+MORT_30_AMI <- readmission[ readmission$Measure.Name=="Acute Myocardial Infarction (AMI) 30-Day Mortality Rate",]
+MORT_30_AMI <- MORT_30_AMI[order(MORT_30_AMI$Score,decreasing=T),]
+hist(MORT_30_AMI[,13],main = "Acute Myocardial Infarction (AMI) 30-Day Mortality Rate")
+```
+```{r}
+MORT_30_CABG <- readmission[ readmission$Measure.Name=="Death rate for CABG",]
+MORT_30_CABG <- MORT_30_CABG[order(MORT_30_CABG$Score,decreasing=T),]
+hist(MORT_30_CABG[,13],main = "Death rate for CABG")
+```
+```{r}
+MORT_30_COPD <- readmission[ readmission$Measure.Name=="Death rate for chronic obstructive pulmonary disease (COPD) patients",]
+MORT_30_COPD <- MORT_30_COPD[order(MORT_30_COPD$Score,decreasing=T),]
+hist(MORT_30_COPD[,13],main = "Death rate for chronic obstructive pulmonary disease (COPD) patients")
+```
+```{r}
+MORT_30_HF <- readmission[ readmission$Measure.Name=="Death rate for CABG",]
+MORT_30_HF <- MORT_30_HF[order(MORT_30_HF$Score,decreasing=T),]
+hist(MORT_30_HF[,13],main = "Death rate for CABG")
+```
+```{r}
+MORT_30_PN <- readmission[ readmission$Measure.Name=="Pneumonia (PN) 30-Day Mortality Rate",]
+MORT_30_PN <- MORT_30_PN[order(MORT_30_PN$Score,decreasing=T),]
+hist(MORT_30_PN[,13],main = "Pneumonia (PN) 30-Day Mortality Rate")
+```
+```{r}
+MORT_30_STK <- readmission[ readmission$Measure.Name=="Death rate for stroke patients",]
+MORT_30_STK <- MORT_30_STK[order(MORT_30_STK$Score,decreasing=T),]
+hist(MORT_30_STK[,13],main = "Death rate for stroke patients")
+```
+```{r}
+READM_30_AMI <- readmission[ readmission$Measure.Name=="Acute Myocardial Infarction (AMI) 30-Day Readmission Rate",]
+READM_30_AMI <- READM_30_AMI[order(READM_30_AMI$Score,decreasing=T),]
+hist(READM_30_AMI[,13],main = "Acute Myocardial Infarction (AMI) 30-Day Readmission Rate")
+```
+```{r}
+READM_30_CABG <- readmission[ readmission$Measure.Name=="Rate of readmission for CABG",]
+READM_30_CABG <- READM_30_CABG[order(READM_30_CABG$Score,decreasing=T),]
+hist(READM_30_CABG[,13],main = "Rate of readmission for CABG")
+```
+```{r}
+READM_30_COPD <- readmission[ readmission$Measure.Name=="Rate of readmission for chronic obstructive pulmonary disease (COPD) patients",]
+READM_30_COPD <- READM_30_COPD[order(READM_30_CABG$Score,decreasing=T),]
+hist(READM_30_COPD[,13],main = "Rate of readmission for chronic obstructive pulmonary disease (COPD) patients")
+```
+```{r}
+READM_30_HF <- readmission[ readmission$Measure.Name=="Heart failure (HF) 30-Day Readmission Rate",]
+READM_30_HF <- READM_30_HF[order(READM_30_HF$Score,decreasing=T),]
+hist(READM_30_HF[,13],main = "Heart failure (HF) 30-Day Readmission Rate")
+```
+
+```{r}
+READM_30_HIP_KNEE <- readmission[ readmission$Measure.Name=="Rate of readmission after hip/knee replacement",]
+READM_30_HIP_KNEE <- READM_30_HIP_KNEE[order(READM_30_HIP_KNEE$Score,decreasing=T),]
+hist(READM_30_HIP_KNEE[,13],main = "Rate of readmission after hip/knee replacement")
+```
+```{r}
+READM_30_HOSP_WIDE <- readmission[ readmission$Measure.Name=="Rate of readmission after discharge from hospital (hospital-wide)",]
+READM_30_HOSP_WIDE <- READM_30_HOSP_WIDE[order(READM_30_HOSP_WIDE$Score,decreasing=T),]
+hist(READM_30_HOSP_WIDE[,13],main = "Rate of readmission after discharge from hospital (hospital-wide)")
+```
+```{r}
+READM_30_PN <- readmission[ readmission$Measure.Name=="Pneumonia (PN) 30-Day Readmission Rate",]
+READM_30_PN <- READM_30_PN[order(READM_30_PN$Score,decreasing=T),]
+hist(READM_30_PN[,13],main = "Pneumonia (PN) 30-Day Readmission Rate")
+```
+```{r}
+READM_30_STK <- readmission[ readmission$Measure.Name=="Rate of readmission for stroke patients",]
+READM_30_STK <- READM_30_STK[order(READM_30_STK$Score,decreasing=T),]
+hist(READM_30_STK[,13],main = "Rate of readmission for stroke patients")
+```
+
+
