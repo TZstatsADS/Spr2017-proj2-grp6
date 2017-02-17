@@ -1,0 +1,131 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+```{r}
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(choroplethrZip)
+library(readr)
+library(stringr)
+```
+
+```{r}
+charge$Total_charges<-charge$total_discharges*charge$average_covered_charges
+total_charge_hos<-tapply(charge$Total_charges,charge$provider_id,sum)
+
+hospital_info<-charge[,2:8]
+hospital_info<-hospital_info[!duplicated(hospital_info),]
+
+hospital_info$Charge<-total_charge_hos
+```
+
+```{r}
+west<-c("WA","OR","MT","ID","WY","CA","NV","UT","CO","AZ","NM","AK","HI")
+midwest<-c("ND","MN","SD","NE","IA","KS","MO","WI","IL","MI","IN","OH")
+northeast<-c("NY","PA","NJ","CT","MA","RI","VT","NH","ME")
+south<-c("TX","OK","AR","LA","MS","MS","AL","TN","KY","WV","MD","DC","DE","VA","NC",
+         "SC","GA","FL")
+```
+
+```{r}
+hospital_info$hospital_region<-rep(NA,nrow(hospital_info))
+hospital_info$hospital_region[hospital_info$provider_state %in% west]<-"west"
+hospital_info$hospital_region[hospital_info$provider_state %in% midwest]<-"midwest"
+hospital_info$hospital_region[hospital_info$provider_state %in% northeast]<-"northeast"
+hospital_info$hospital_region[hospital_info$provider_state %in% south]<-"south"
+```
+
+```{r}
+p1 <- plot_ly(hospital_info[hospital_info$hospital_region == "west",], x = ~Charge, color = ~provider_state, type = "box")
+p1
+
+p2 <- plot_ly(hospital_info[hospital_info$hospital_region == "midwest",], x = ~Charge, color = ~provider_state, type = "box")
+p2
+
+p3 <- plot_ly(hospital_info[hospital_info$hospital_region == "northeast",], x = ~Charge, color = ~provider_state, type = "box")
+p3
+
+p4 <- plot_ly(hospital_info[hospital_info$hospital_region == "south",], x = ~Charge, color = ~provider_state, type = "box")
+p4
+```
+
+
+Measure Map
+```{r}
+readmission1 <- readmission[,c(1:9,13)]
+readmission1$Score[readmission1$Score=="Not Available"]<-0
+select<-readmission1 %>% 
+  filter(Measure.Name %in% unique(readmission1$Measure.Name)[7:14]) %>%
+  group_by(Measure.Name, provider_state) %>% 
+  filter(Score==max(Score))
+
+measure<-unique(select$Measure.Name)
+select$Measure.Name[select$Measure.Name==measure[1]]<-"chronic obstructive pulmonary disease (COPD) patients"
+select$Measure.Name[select$Measure.Name==measure[2]]<-"stroke patients"
+select$Measure.Name[select$Measure.Name==measure[3]]<-"Heart failure (HF)"
+select$Measure.Name[select$Measure.Name==measure[4]]<-"hip/knee replacement"
+select$Measure.Name[select$Measure.Name==measure[5]]<-"Acute Myocardial Infarction (AMI)"
+select$Measure.Name[select$Measure.Name==measure[6]]<-"CABG"
+select$Measure.Name[select$Measure.Name==measure[7]]<-"hospital-wide"
+select$Measure.Name[select$Measure.Name==measure[8]]<-"Pneumonia (PN)"
+select$Score<- as.numeric(select$Score)
+select$Score<-select$Score^3
+```
+
+```{r}
+library(plotly)
+select$info<-with(select,paste(provider_name, "<br>", provider_street_address,"<br>",provider_city, "<br>", County.Name))
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+plot_geo(select[select$Measure.Name=="CABG",], locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~Score,text = ~info, locations = ~provider_state,
+    color = ~Score, colors = 'Oranges'
+  ) %>%
+  layout(
+    title = 'Hospital Selection',
+    geo = g
+  )
+```
+
+```{r}
+library(plotly)
+df <- read.csv("https://raw.githubusercontent.com/plotly/datasets/master/2011_us_ag_exports.csv")
+df$hover <- with(df, paste(state, '<br>', "Beef", beef, "Dairy", dairy, "<br>",
+                           "Fruits", total.fruits, "Veggies", total.veggies,
+                           "<br>", "Wheat", wheat, "Corn", corn))
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+plot_geo(df, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~total.exports, text = ~hover, locations = ~code,
+    color = ~total.exports, colors = 'Purples'
+  ) %>%
+  colorbar(title = "Millions USD") %>%
+  layout(
+    title = '2011 US Agriculture Exports by State<br>(Hover for breakdown)',
+    geo = g
+  )
+```
+
+
+
+
