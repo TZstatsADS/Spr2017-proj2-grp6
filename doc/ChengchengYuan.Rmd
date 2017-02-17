@@ -1,0 +1,169 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+## Load the data manipulation libraries
+
+```{r load_libs, message=F,results=F}
+if (!require("DT")) install.packages('DT')
+if (!require("dtplyr")) install.packages('dtplyr')
+if(!require("lubridate")) install.packages('lubridate')
+
+library(dtplyr)
+library(dplyr)
+library(DT)
+library(lubridate)
+library(plyr)
+library(ggplot2)
+library(maps)
+```
+
+## Import readmission data
+
+```{r load_data}
+readmission <-read.csv(file="../data/readmission_cleaning.csv", as.is=T)
+readmission <- readmission[,-1]
+```
+
+## Calculate the hospital with highest score for each measurement name
+
+```{r}
+max_score <- function(measure.df){
+  index <- which.max(measure.df$Score)
+  return(measure.df[index,-9])
+}
+high_score <- ddply(readmission,.(Measure.Name),max_score) #data frame of the hospital which has the highest score for each measurement name
+datatable(high_score)
+```
+
+## Output the data table for one state and one measurement with the score from highest to lowest.
+
+For each state and each measurement, give the table of hospital according to the sorted score from the highest to lowest. It can be built into Rshiny. The following give the example of State AL and measurement name Acute Myocardial Infarction (AMI) 30-Day Mortality Rate.
+
+```{r}
+AL_measure1 <- readmission[readmission$State=="AL" & readmission$Measure.ID=="MORT_30_AMI",] 
+AL_measure1 <- AL_measure1[order(AL_measure1$Score,decreasing=T),]
+datatable(AL_measure1)
+```
+
+```{r,eval=F}
+readmission1 <-read.csv(file="../data/readmission_data.csv", as.is=T)
+readmission1=
+  readmission1%>%
+  filter(ZIP.Code>0)%>%
+  mutate(region=as.character(ZIP.Code))
+countzip <- tapply(readmission1$Provider.ID,readmission1$region,count)
+count.df <- lapply(countzip,length)
+count.df <- unlist(count.df)
+count.df <- data.frame(region=names(count.df),value=count.df)
+rownames(count.df) <- 1:nrow(count.df)
+save(count.df, file="../output/count.RData")
+readmission=
+  readmission%>%
+  filter(ZIP.Code>0)%>%
+  mutate(region=as.character(ZIP.Code))
+scorezip <- tapply(readmission$Score,readmission$region,mean)
+scorezip.df <- data.frame(region=names(scorezip),value=scorezip)
+rownames(scorezip.df) <- 1:nrow(scorezip.df)
+save(scorezip.df, file="../output/scorezip.RData")
+```
+
+## Visualize using `choroplethr`
+"A choropleth map (from Greek χώρο ("area/region") + πλήθος ("multitude")) is a thematic map in which areas are shaded or patterned in proportion to the measurement of the statistical variable being displayed on the map, such as population density or per-capita income."
+
+## Install the package. 
+```{r install_pkgs, eval=F,results=F}
+if (!require("choroplethr")) install.packages("choroplethr")
+if (!require("devtools")) install.packages("devtools")
+
+library(devtools)
+
+if (!require("choroplethrZip")) 
+  devtools::install_github('arilamstein/choroplethrZip@v1.5.0')
+
+if (!require("ggplot2")) devtools::install_github("hadley/ggplot2")
+if (!require("ggmap")) devtools::install_github("dkahle/ggmap")
+```
+## Hospital in readmission dataset
+```{r, message=F, warning=FALSE,echo=FALSE,results=FALSE}
+library(choroplethrZip)
+zip_choropleth(scorezip.df,
+    title       = "Hospital in readmission dataset",
+    legend      = "Average score of Hospitals")
+```
+
+## Another map of visualization using the score 
+
+draw a USA Map
+
+Calculate the mean score of every state to evaluate the health care quality of every state and make a comparision
+```{r,message=F,warning=F,results=F, echo=TRUE, message=F, warning=F, results=F}
+states_map <- map_data("state")
+statename <- read.csv(file="../data/statename.csv", as.is=T, header=F)
+colnames(statename) <- c("name","simple")
+score_state <- tapply(readmission$Score,readmission$State,mean)
+score_state.df <- data.frame(region=names(score_state),score=score_state)
+score_df <- merge(x=score_state.df,y=statename,by.x="region",by.y="simple")
+score_map<- merge(states_map,score_df,by.x="region",by.y="name")
+score_map <- arrange(score_map,group,order)
+ggplot(score_map, aes(x=long,y=lat,group=group,fill=score))+
+  geom_polygon(color="black")+
+  coord_map("polyconic")+
+  labs(title="Average Score of Hospitals by State")
+```
+```{r, results=F}
+states_map <- map_data("state")
+statename <- read.csv(file="../data/statename.csv", as.is=T, header=F)
+colnames(statename) <- c("name","simple")
+measurename <- unique(readmission$Measure.Name)
+readmission_measure1 <- readmission[readmission$Measure.Name==measurename[1],]
+score_state <- tapply(readmission_measure1$Score,readmission_measure1$State,mean)
+score_state.df <- data.frame(region=names(score_state),score=score_state)
+score_df <- merge(x=score_state.df,y=statename,by.x="region",by.y="simple")
+score_map<- merge(states_map,score_df,by.x="region",by.y="name")
+score_map <- arrange(score_map,group,order)
+ggplot(score_map, aes(x=long,y=lat,group=group,fill=score))+
+  geom_polygon(color="black")+
+  coord_map("polyconic")+
+  labs(title="Average Score of Hospitals for the first measure name by State")
+```
+
+## Geocode addresses 
+We can obtain more geo information about individual hospitals in the high_score dataset. 
+
+```{r geo_codes, message=F,results=F}
+library(ggmap)
+library(dplyr)
+high_score$ADDRESS_Ext <- paste(high_score$Address,high_score$City,high_score$State, sep=", ")
+high_score.geo=  
+  high_score%>%
+  mutate_geocode(ADDRESS_Ext)
+```
+
+## Plot using longitude and latitude
+```{r code_plot_indiv, message=F}
+library(ggmap)
+ggmap(get_map("United States",zoom=4,color = "bw")) + 
+  geom_point(data=high_score.geo, aes(x=lon,y=lat),  color='red')+
+  labs(title="Location of the highest score hospitals for the 14 measurements")
+```
+
+##Location for top ten hospitals for one measurement in one state
+
+```{r, message=F,results=F}
+AL_measure1_plot <- AL_measure1[1:10,]
+AL_measure1_plot$ADDRESS_Ext <- paste(AL_measure1_plot$Address,AL_measure1_plot$City,AL_measure1_plot$State, sep=", ")
+AL_measure1.geo=  
+  AL_measure1_plot%>%
+  mutate_geocode(ADDRESS_Ext)
+```
+
+```{r, message=F}
+ggmap(get_map("Alabama",zoom=7,color = "bw")) + 
+  geom_point(data=AL_measure1.geo, aes(x=lon,y=lat),  color='red')+
+  labs(title="Location of the top ten score hospitals for the first measurement")
+```
+
