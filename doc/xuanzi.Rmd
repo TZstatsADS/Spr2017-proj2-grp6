@@ -1,7 +1,8 @@
 ---
-title: "R Notebook"
+title: "Xuanzi Xu Notebook"
 output: html_notebook
 ---
+
 ```{r}
 library(ggplot2)
 library(plotly)
@@ -11,7 +12,10 @@ library(readr)
 library(stringr)
 ```
 
+Data for Boxplots
 ```{r}
+load("../output/Select Readmission Data.RData")
+load("../output/charge.Rda")
 charge$Total_charges<-charge$total_discharges*charge$average_covered_charges
 total_charge_hos<-tapply(charge$Total_charges,charge$provider_id,sum)
 
@@ -21,6 +25,7 @@ hospital_info<-hospital_info[!duplicated(hospital_info),]
 hospital_info$Charge<-total_charge_hos
 ```
 
+Define the regions
 ```{r}
 west<-c("WA","OR","MT","ID","WY","CA","NV","UT","CO","AZ","NM","AK","HI")
 midwest<-c("ND","MN","SD","NE","IA","KS","MO","WI","IL","MI","IN","OH")
@@ -37,6 +42,7 @@ hospital_info$hospital_region[hospital_info$provider_state %in% northeast]<-"nor
 hospital_info$hospital_region[hospital_info$provider_state %in% south]<-"south"
 ```
 
+Build the boxplots
 ```{r}
 p1 <- plot_ly(hospital_info[hospital_info$hospital_region == "west",], x = ~Charge, color = ~provider_state, type = "box")
 p1
@@ -51,8 +57,7 @@ p4 <- plot_ly(hospital_info[hospital_info$hospital_region == "south",], x = ~Cha
 p4
 ```
 
-
-Measure Map
+Data for Map selection
 ```{r}
 readmission1 <- readmission[,c(1:9,13)]
 readmission1$Score[readmission1$Score=="Not Available"]<-0
@@ -74,6 +79,7 @@ select$Score<- as.numeric(select$Score)
 select$Score<-select$Score^3
 ```
 
+Build the map
 ```{r}
 library(plotly)
 select$info<-with(select,paste(provider_name, "<br>", provider_street_address,"<br>",provider_city, "<br>", County.Name))
@@ -97,34 +103,13 @@ plot_geo(select[select$Measure.Name=="CABG",], locationmode = 'USA-states') %>%
     geo = g
   )
 ```
-
+Data for Data Table
 ```{r}
-library(plotly)
-df <- read.csv("https://raw.githubusercontent.com/plotly/datasets/master/2011_us_ag_exports.csv")
-df$hover <- with(df, paste(state, '<br>', "Beef", beef, "Dairy", dairy, "<br>",
-                           "Fruits", total.fruits, "Veggies", total.veggies,
-                           "<br>", "Wheat", wheat, "Corn", corn))
-# give state boundaries a white border
-l <- list(color = toRGB("white"), width = 2)
-# specify some map projection/options
-g <- list(
-  scope = 'usa',
-  projection = list(type = 'albers usa'),
-  showlakes = TRUE,
-  lakecolor = toRGB('white')
-)
-
-plot_geo(df, locationmode = 'USA-states') %>%
-  add_trace(
-    z = ~total.exports, text = ~hover, locations = ~code,
-    color = ~total.exports, colors = 'Purples'
-  ) %>%
-  colorbar(title = "Millions USD") %>%
-  layout(
-    title = '2011 US Agriculture Exports by State<br>(Hover for breakdown)',
-    geo = g
-  )
+    data1 <- readmission1
+    data1$Score<- as.numeric(data1$Score)
+    data1<-arrange(data1, desc(Score))
 ```
+
 
 
 
