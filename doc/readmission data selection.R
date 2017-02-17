@@ -14,7 +14,7 @@ drg <- as.numeric(str_extract(hospital_charge_data$drg_definition,"[0-9]+"))
 mdf <- hospital_charge_data %>% mutate(drg_code = drg)
 
 #Import the readmission data
-readmission<-read.csv("/Users/xuxuanzi/Desktop/Spr2017-proj2-grp6/data/readmission_data.csv")
+readmission<-read.csv("/Users/xuxuanzi/Desktop/Spr2017-proj2-grp6/data/readmission_data.csv", as.is =T, header = T)
 
 #Reorder by provider id
 charge<-arrange(mdf, provider_id)
@@ -37,4 +37,3 @@ readmission<-filter(readmission,Provider.ID  %in% a)
 
 # Match the colnames between two datasets
 colnames(readmission)[1:6]<-colnames(charge)[2:7]
-
