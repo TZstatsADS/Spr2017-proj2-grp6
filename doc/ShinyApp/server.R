@@ -5,7 +5,7 @@ library(readr)
 library(ggplot2)
 library(devtools)
 #install_github('arilamstein/choroplethrZip@v1.4.0')
-#library(choroplethrZip)
+library(choroplethrZip)
 
 #Import the hospital charge data
 hospital_charge_data <- read_csv("../../data/hospital_charge_data.csv", col_types = cols(`Average Covered Charges` = col_number(),`Average Medicare Payments` = col_number(),`Average Total Payments` = col_number()))
@@ -62,7 +62,7 @@ ij<-ij %>% mutate(zip = as.character(provider_zip_code),
 
 #Clean mapping data so that it works with choropleth package
 
-#data("zip.regions")
+data("zip.regions")
 cz<-zip.regions %>%
   select(region,county.name,state.name)
 ij<-ij %>%
