@@ -1,29 +1,6 @@
-# Define a server for the Shiny app
-library(plotly)
-library(shiny)
-
 function(input, output) {
   
-  output$chargePlot <- renderPlotly(
-    
-    plot_ly(hospital_info[hospital_info$hospital_region == input$region,], x = ~Charge, 
-            color = ~provider_state, type = "box") %>%
-      layout(title="Charges of Hospitals in Each State", yaxis = list(title="States"),xaxis = list(title="Charges"))
-    )
-  
-  output$mapPlot <- renderPlotly(
-    
-    plot_geo(select[select$Measure.Name==input$measure,], locationmode = 'USA-states') %>%
-      add_trace(
-        z = ~Score,text = ~info, locations = ~provider_state,
-        color = ~Score, colors = 'Oranges'
-      ) %>%
-      layout(
-        title = 'Hospital Selection',
-        geo = g
-      )
-  )
-  
+  # Filter data based on selections
   output$table <- DT::renderDataTable(DT::datatable({
     data <- readmission[,c(1:9,13)]
     data$Score[data$Score=="Not Available"]<-0
@@ -39,4 +16,5 @@ function(input, output) {
     }
     data
   }))
+  
 }
