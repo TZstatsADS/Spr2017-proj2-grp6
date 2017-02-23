@@ -2,7 +2,7 @@
 
 ### [Project Description](doc/project2_desc.md)
 
-![screenshot](doc/screenshot2.png)
+![screenshot](doc/US regional hospital ranking.png)
 
 ## US Hospital Measure Charge and Ranking
 Term: Spring 2017
