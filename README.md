@@ -4,7 +4,7 @@
 
 ![](doc/US regional hospital ranking.png)
 
-## [US Hospital Measure Charge and Ranking](https://pelican.shinyapps.io/hospital_charge_data/)
+## [US Hospital Measure Cost and Ranking](https://pelican.shinyapps.io/hospital_charge_data/)
 
 Term: Spring 2017
 
@@ -17,13 +17,16 @@ Term: Spring 2017
 	+ Bondarenko Nikita
 
 + **Project Background**: 
-We all know that the US hospital is expensive and the measure information is not very clear and listed to us. Thus our group aims to bulid an app can provide regional hospital information of average covered charges, average total payments, measure ranking etc. With the help of this, we may can find a hospital with a higher ranking score but a relatively lower charge.
+We all know that the US hospital is expensive and measure information is not very clear and listed to us. Thus our group aims to build an app can provide regional hospital information of average covered charges, average total payments, measure ranking etc. With the help of this, we may can find a hospital with a higher ranking score but a relatively lower charge.
 
 + **Project Summary**: 
-This project explores and visualizes the charge and ranking in the United States from 2012 to 2015, include each hospital information like address, phone number, zip code, measure ID, average charge in single measure. We created a Shiny App to help in 3 main tabs: statistics, map and data. 
-    + Statistics:
-    + Map:This tab presents 4 maps. First one plots the USA map with the color represents the average score of every zip code or state for 14 measurements and also the one for the first measurement. The second one tells the average cost in each states. Next one plots two location map which are Location of the highest score hospitals for the 14 measurements and Location of the top ten score hospitals for the all measurement. The Last one indicates the top ranked hospital in each states.
-    + Data: One is for hospital with highest score for each measurement name, the other is data table for one state and one measurement with the score from highest to lowest.
+This project explores and visualizes the charge and ranking in the United States from 2012 to 2015, includes each hospital information like address, phone number, zip code, measure ID, average charge of a single measure. We created a Shiny App to help in 3 main tabs: Cost, Quality and Top Hospital Finder. 
+
+    1) Cost: This main tab contains 2 parts, one is procedure cost variation, which maps average, absolute cost of a medical procedure averaged across all hospitals in US. The second one is about hospital system revenues, describing the total charge, largest charge and top earning hospital&procedure.
+    
+    2) Quality: This tab mainly presents hospital’s excess readmission ratio, coming with related data-table of complete information with readmission ratio.
+   
+    3) Top Hospital Finder: Based on the average score of different measures to rank top hospitals in the each state.
     
 + **Contribution statement**: 
 All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement.
