@@ -2,9 +2,10 @@
 
 ### [Project Description](doc/project2_desc.md)
 
-![screenshot](doc/US regional hospital ranking.png)
+![](doc/US regional hospital ranking.png)
 
 ## [US Hospital Measure Charge and Ranking](https://pelican.shinyapps.io/hospital_charge_data/)
+
 Term: Spring 2017
 
 + Team: #Group 6
@@ -24,7 +25,12 @@ This project explores and visualizes the charge and ranking in the United States
     + Map:This tab presents 4 maps. First one plots the USA map with the color represents the average score of every zip code or state for 14 measurements and also the one for the first measurement. The second one tells the average cost in each states. Next one plots two location map which are Location of the highest score hospitals for the 14 measurements and Location of the top ten score hospitals for the all measurement. The Last one indicates the top ranked hospital in each states.
     + Data: One is for hospital with highest score for each measurement name, the other is data table for one state and one measurement with the score from highest to lowest.
     
-    Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
++ **Contribution statement**: 
+All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement.
+
+Hope this app could help us to find their suitable hospital!
+
+Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
 ```
 proj/
@@ -34,8 +40,3 @@ _______doc/
 _______lib/
 _______output/
 ```
-    
-+ **Contribution statement**: 
-All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement.
-
-Hope this app could help us to find their suitable hospital!
