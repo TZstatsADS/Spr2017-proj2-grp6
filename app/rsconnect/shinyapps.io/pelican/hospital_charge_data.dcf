@@ -1,0 +1,10 @@
+name: hospital_charge_data
+title: hospital_charge_data
+account: pelican
+server: shinyapps.io
+appId: 157108
+bundleId: 724016
+url: https://pelican.shinyapps.io/hospital_charge_data/
+when: 1487961231.17239
+asMultiple: FALSE
+asStatic: FALSE

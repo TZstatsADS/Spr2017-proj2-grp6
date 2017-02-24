@@ -9,20 +9,17 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
+library(plyr)
 library(stringr)
 library(tidyr)
 library(readr)
-library(choroplethr)
-library(choroplethrMaps)
-library(choroplethrZip)
-source("../lib/hospital_data_utils.R")
-source("../lib/mapping_region_utils.R")
-source("../lib/cost_filtering_utils.R")
+library(dplyr)
 ```
 # Load Clean Data
 ```{r, message=FALSE, warning=FALSE}
-hcd <- loadHospitalChargeData_CSV()
-hrd <- loadHospitalReadmissionData_CSV()
+source("../data/hcd.RData")
+source("../data/hrd.RData")
+source("../data/states.RData")
 ```
 # Get data for the heatmap
 ```{r}
@@ -33,6 +30,7 @@ hospital_charges <- hcd %>%
   summarise(provider_gross_charges = sum(charge_total))
 ```
 
+Construct Heatmap data showing top earning procedures at top grossing hospitals
 ```{r}
 top_hospitals_billing <- hcd %>%
   select(provider_id, total_discharges, average_covered_charges) %>%
@@ -54,6 +52,18 @@ desc <- hcd %>%
   distinct()
 
 hm <- left_join(top_hosp_proc,desc)
+
+hm<- hm %>% select(provider_name,drg_definition,total_charges) %>%
+  group_by(provider_name,drg_definition) %>% 
+  spread(drg_definition, total_charges)
+hm[is.na(hm)]<-0
+rname <- hm$provider_name
+rownames(hm)<-rname
+hm$provider_name<-NULL
+
+save(hm, file="../data/hm.RData")
+save(hm, file="../app/data/hm.RData")
+
 ```
 heatmap
 ```{r fig.height=8}

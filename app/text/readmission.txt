@@ -1,0 +1,3 @@
+Section 3025 of the Affordable Care Act added section 1886(q) to the Social Security Act establishing the Hospital Readmissions Reduction Program, which requires CMS to reduce payments to IPPS hospitals with excess readmissions, effective for discharges beginning on October 1, 2012.
+
+Established a methodology to calculate the excess readmission ratio for each applicable condition, which is used, in part, to calculate the readmission payment adjustment. A hospital’s excess readmission ratio is a measure of a hospital’s readmission performance compared to the national average for the hospital’s set of patients with that applicable condition.

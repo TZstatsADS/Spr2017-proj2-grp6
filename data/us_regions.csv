@@ -1,12 +1,13 @@
-Connecticut,New England & Mid Atlantic
-Maine,New England & Mid Atlantic
-Massachusetts,New England & Mid Atlantic
-New Hampshire,New England & Mid Atlantic
-Rhode Island,New England & Mid Atlantic
-Vermont,New England & Mid Atlantic
-New Jersey,New England & Mid Atlantic
-New York,New England & Mid Atlantic
-Pennsylvania,New England & Mid Atlantic
+state_name,region_str
+Connecticut,Northeast
+Maine,Northeast
+Massachusetts,Northeast
+New Hampshire,Northeast
+Rhode Island,Northeast
+Vermont,Northeast
+New Jersey,Northeast
+New York,Northeast
+Pennsylvania,Northeast
 Illinois,Midwest
 Indiana,Midwest
 Michigan,Midwest

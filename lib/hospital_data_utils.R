@@ -1,5 +1,4 @@
 loadHospitalChargeData_CSV <- function(){
-  require(choroplethrZip,dplyr)
   hospital_charge_data <- read_csv("../data/hospital_charge_data.csv",
                                    col_types = cols(`Average Covered Charges` = col_number(),
                                                     `Average Medicare Payments` = col_number(), 
@@ -32,15 +31,16 @@ loadHospitalChargeData_CSV <- function(){
 }
 
 loadHospitalReadmissionData_CSV <- function(){
-  require(choroplethrZip)
   readmission_data <- read_csv("../data/readmission_data.csv",
                                col_types = cols(Denominator = col_number(), 
                                                       `Higher Estimate` = col_number(), 
                                                       `Lower Estimate` = col_number(), 
                                                       `Measure End Date` = col_date(format = "%m/%d/%Y"), 
                                                       `Measure Start Date` = col_date(format = "%m/%d/%Y"), 
-                                                      `Phone Number` = col_skip(), Score = col_number(), 
-                                                      `ZIP Code` = col_character()))
+                                                      `Phone Number` = col_skip(),
+                                                      Score = col_number(), 
+                                                      `ZIP Code` = col_character()),
+                               na = "NA")
   
   # remove useless data
   NULL->readmission_data$Footnote
@@ -50,8 +50,9 @@ loadHospitalReadmissionData_CSV <- function(){
   new_cnames <- tolower(gsub("[ .]","_",cnames,perl=FALSE))
   new_cnames -> colnames(readmission_data)
   hrd <- readmission_data %>%
+    filter(!is.na(denominator)) %>%
     mutate(city_name = tolower(city), provider_state = state, provider_city = tolower(city),
-           zip_code = str_pad(zip_code,5,side=c("left"),pad="0")) %>%
+           provider_zip_code = str_pad(zip_code,5,side=c("left"),pad="0")) %>%
     select(provider_id,
            hospital_name,
            measure_id,
@@ -66,8 +67,54 @@ loadHospitalReadmissionData_CSV <- function(){
            address,
            provider_city,
            provider_state,
-           zip_code
+           provider_zip_code
            )
-  hrd$zip_code <- str_pad(hrd$zip_code,5,side=c("left"),pad = "0")
   return(hrd)
+}
+
+loadRegionInfo_CSV <- function(){
+  reg <- read_csv("../data/us_regions.csv")
+  reg <- mutate(reg,state_name = tolower(state_name))
+  return(reg)
+}
+
+loadIncomeData_TSV <- function(){
+  data <- read_delim("../data/income_data_fred.txt", 
+                     "\t", escape_double = FALSE, trim_ws = TRUE)
+  colnames(data) -> cnames
+  labels<-substring(cnames[-1],9,10)
+  median_income <- data[nrow(data),-1] 
+  colnames(median_income) <- labels
+  df <- tibble(labels, as.vector(t(median_income)))
+  colnames(df) <- c("state_name","median_income")
+  return(df)
+}
+
+loadStateScorecard_XML <- function(){
+  data <- xmlParse("../data/state_scorecard.xml")
+  df <- xmlToDataFrame(data)
+  x <- colnames(df)
+  colnames(df)<-tolower(x)
+  return(df)
+}
+
+getRegionInfoByZip <- function(zip_list){
+  data("zip.regions")
+  
+  out <- zip.regions %>%
+    filter(region %in% zip_list) %>%
+    select(region, county.name, county.fips.numeric)
+  colnames(out) <- c("zip_code","county_name","county_id")
+  return(out)
+}
+
+getStateInfoByAbbrev <- function(state_abbrev_list){
+  data("state.regions")
+  
+  state_abbrev_list <- toupper(state_abbrev_list)
+  out <- state.regions %>%
+    filter(abb %in% state_abbrev_list) %>%
+    select(region, abb, fips.numeric)
+  colnames(out) <- c("state_name","state_short","state_id")
+  return(out)
 }
